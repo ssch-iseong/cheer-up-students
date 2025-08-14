@@ -1,9 +1,12 @@
+git clone https://github.com/your-username/encouragement-messages.git
+cd encouragement-messages
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>수험생 응원 메시지 작성</title>
+    <meta name="description" content="수험생들을 위한 따뜻한 응원 메시지를 작성해주세요">
     <style>
         * {
             margin: 0;
@@ -207,6 +210,7 @@
                 <textarea 
                     id="message" 
                     placeholder="수험생들에게 전하고 싶은 따뜻한 응원의 말을 적어주세요. 
+
 예시: 
 '지금 이 순간도 열심히 공부하고 있을 여러분, 정말 대단해요! 결과에 상관없이 노력하는 모든 과정이 소중합니다. 화이팅!'
 
@@ -231,7 +235,7 @@
         </div>
 
         <div style="text-align: center;">
-            <a href="#" class="nav-btn" onclick="openMessageView()">
+            <a href="view.html" class="nav-btn">
                 📖 전체 응원 메시지 보러가기
             </a>
         </div>
@@ -304,218 +308,6 @@
                 successMessage.classList.remove('show');
             }, 3000);
         });
-
-        // 메시지 보기 페이지로 이동
-        function openMessageView() {
-            // 실제 구현에서는 별도 페이지로 이동하거나 모달을 열 수 있습니다
-            const newWindow = window.open('', '_blank');
-            newWindow.document.write(getMessageViewHTML());
-            newWindow.document.close();
-        }
-
-        // 메시지 보기 페이지 HTML 생성
-        function getMessageViewHTML() {
-            const messages = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            
-            return `
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>수험생 응원 메시지</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Malgun Gothic', sans-serif;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-        }
-
-        .title {
-            font-size: 2.2rem;
-            font-weight: bold;
-            background: linear-gradient(135deg, #f093fb, #f5576c);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            color: #666;
-            font-size: 1.1rem;
-        }
-
-        .message-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            margin-bottom: 20px;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            animation: fadeInUp 0.6s ease-out;
-        }
-
-        .message-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .message-text {
-            font-size: 1.1rem;
-            line-height: 1.7;
-            color: #333;
-            margin-bottom: 15px;
-        }
-
-        .message-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.9rem;
-            color: #888;
-        }
-
-        .like-btn {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-        }
-
-        .like-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
-        }
-
-        .no-messages {
-            text-align: center;
-            padding: 60px 20px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            color: #666;
-            font-size: 1.2rem;
-        }
-
-        .back-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            padding: 12px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 600;
-            color: #333;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        .back-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-            
-            .header {
-                padding: 20px;
-            }
-            
-            .title {
-                font-size: 1.8rem;
-            }
-        }
-    </style>
-</head>
-<body>
-    <button class="back-btn" onclick="window.close()">← 돌아가기</button>
-    
-    <div class="container">
-        <div class="header">
-            <h1 class="title">💝 수험생 응원 메시지</h1>
-            <p class="subtitle">여러분을 응원하는 따뜻한 마음들이 모여있어요</p>
-            <p style="margin-top: 10px; color: #f5576c; font-weight: 600;">총 ${messages.length}개의 응원 메시지</p>
-        </div>
-
-        ${messages.length === 0 ? 
-            `<div class="no-messages">
-                아직 응원 메시지가 없어요.<br>
-                첫 번째 응원 메시지를 남겨보시는 건 어떨까요? 🌟
-            </div>` 
-            : 
-            messages.map((msg, index) => `
-                <div class="message-card" style="animation-delay: ${index * 0.1}s">
-                    <div class="message-text">${msg.message.replace(/\n/g, '<br>')}</div>
-                    <div class="message-meta">
-                        <span>${new Date(msg.timestamp).toLocaleString('ko-KR')}</span>
-                        <button class="like-btn" onclick="likeMessage(${msg.id})">
-                            ❤️ ${msg.likes || 0}
-                        </button>
-                    </div>
-                </div>
-            `).join('')
-        }
-    </div>
-
-    <script>
-        function likeMessage(messageId) {
-            const messages = JSON.parse(localStorage.getItem('encouragementMessages') || '[]');
-            const messageIndex = messages.findIndex(m => m.id === messageId);
-            
-            if (messageIndex !== -1) {
-                messages[messageIndex].likes = (messages[messageIndex].likes || 0) + 1;
-                localStorage.setItem('encouragementMessages', JSON.stringify(messages));
-                location.reload(); // 페이지 새로고침으로 업데이트된 좋아요 수 반영
-            }
-        }
-    </script>
-</body>
-</html>
-            `;
-        }
     </script>
 </body>
 </html>
