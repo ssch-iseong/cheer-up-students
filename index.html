@@ -3,237 +3,519 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>수험생 여러분, 힘내세요!</title>
-    <!-- Tailwind CSS for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React and ReactDOM for the UI -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Babel to transpile JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Firebase SDKs -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, query, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <title>수험생 응원 메시지 작성</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-        // Firebase configuration and global variables are provided by the environment
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
 
-        window.firebase = {
-            initializeApp,
-            getAuth,
-            signInWithCustomToken,
-            onAuthStateChanged,
-            signInAnonymously,
-            getFirestore,
-            collection,
-            query,
-            addDoc,
-            onSnapshot,
-            serverTimestamp,
-            firebaseConfig,
-            appId,
-            initialAuthToken
-        };
-    </script>
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 2.2rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 120px;
+            transition: all 0.3s ease;
+            background: #fff;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 0.9rem;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 20px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+
+        .success-message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .nav-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .nav-btn:hover {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .message-count {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+
+            .title {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 font-sans antialiased">
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">💪 수험생 응원하기</h1>
+            <p class="subtitle">힘내고 있는 모든 수험생들에게<br>따뜻한 응원의 메시지를 보내주세요!</p>
+        </div>
 
-    <div id="root"></div>
+        <div class="message-count" id="messageCount">
+            💌 지금까지 <span id="countNumber">0</span>개의 응원 메시지가 전달되었어요!
+        </div>
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-        const { initializeApp, getAuth, signInWithCustomToken, onAuthStateChanged, signInAnonymously, getFirestore, collection, query, addDoc, onSnapshot, serverTimestamp, firebaseConfig, appId, initialAuthToken } = window.firebase;
-        
-        // Custom modal component for alerts
-        const Modal = ({ message, onClose }) => (
-            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-                <div className="relative p-8 bg-white w-96 rounded-lg shadow-lg text-center">
-                    <h3 className="text-xl font-bold mb-4">알림</h3>
-                    <p className="text-gray-700 mb-6">{message}</p>
-                    <button
-                        onClick={onClose}
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200"
-                    >
-                        닫기
-                    </button>
+        <form id="encouragementForm">
+            <div class="form-group">
+                <label for="message">✨ 응원 메시지</label>
+                <textarea 
+                    id="message" 
+                    placeholder="수험생들에게 전하고 싶은 따뜻한 응원의 말을 적어주세요. 
+예시: 
+'지금 이 순간도 열심히 공부하고 있을 여러분, 정말 대단해요! 결과에 상관없이 노력하는 모든 과정이 소중합니다. 화이팅!'
+
+'시험이 다가올수록 불안하겠지만, 지금까지 쌓아온 실력을 믿어보세요. 여러분의 꿈을 응원합니다! 💪'
+
+'완벽하지 않아도 괜찮아요. 최선을 다하는 여러분의 모습 자체가 아름답습니다. 건강 챙기면서 파이팅!'"
+                    maxlength="500"
+                    required></textarea>
+                <div class="char-count">
+                    <span id="charCount">0</span>/500
                 </div>
             </div>
-        );
 
-        // Main App component
-        const App = () => {
-            const [messages, setMessages] = useState([]);
-            const [newMessage, setNewMessage] = useState('');
-            const [isLoading, setIsLoading] = useState(true);
-            const [userId, setUserId] = useState(null);
-            const [db, setDb] = useState(null);
-            const [isAuthReady, setIsAuthReady] = useState(false);
-            const [showModal, setShowModal] = useState(false);
-            const [modalMessage, setModalMessage] = useState('');
+            <button type="submit" class="submit-btn" id="submitBtn">
+                💌 응원 메시지 전송하기
+            </button>
+        </form>
 
-            const showCustomModal = (message) => {
-                setModalMessage(message);
-                setShowModal(true);
+        <div class="success-message" id="successMessage">
+            🎉 응원 메시지가 성공적으로 전송되었습니다! 
+            수험생들에게 큰 힘이 될 거예요. 감사합니다! ❤️
+        </div>
+
+        <div style="text-align: center;">
+            <a href="#" class="nav-btn" onclick="openMessageView()">
+                📖 전체 응원 메시지 보러가기
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // 로컬 스토리지 키
+        const STORAGE_KEY = 'encouragementMessages';
+        
+        // 메시지 개수 업데이트
+        function updateMessageCount() {
+            const messages = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            document.getElementById('countNumber').textContent = messages.length;
+        }
+
+        // 페이지 로드 시 메시지 개수 업데이트
+        updateMessageCount();
+
+        // 글자 수 카운터
+        const messageTextarea = document.getElementById('message');
+        const charCountSpan = document.getElementById('charCount');
+
+        messageTextarea.addEventListener('input', function() {
+            const currentLength = this.value.length;
+            charCountSpan.textContent = currentLength;
+            
+            if (currentLength > 450) {
+                charCountSpan.style.color = '#ef4444';
+            } else {
+                charCountSpan.style.color = '#888';
+            }
+        });
+
+        // 폼 제출 처리
+        document.getElementById('encouragementForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const messageText = messageTextarea.value.trim();
+            
+            if (!messageText) {
+                alert('응원 메시지를 입력해주세요!');
+                return;
+            }
+
+            // 메시지 저장
+            const messages = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            const newMessage = {
+                id: Date.now(),
+                message: messageText,
+                timestamp: new Date().toISOString(),
+                likes: 0
             };
             
-            // Firebase initialization and authentication
-            useEffect(() => {
-                if (Object.keys(firebaseConfig).length === 0) {
-                    console.error("Firebase config is empty. Please check the environment variables.");
-                    return;
-                }
-                const app = initializeApp(firebaseConfig);
-                const firestore = getFirestore(app);
-                const authInstance = getAuth(app);
-                setDb(firestore);
-                
-                const unsubscribeAuth = onAuthStateChanged(authInstance, async (user) => {
-                    if (user) {
-                        setUserId(user.uid);
-                        setIsAuthReady(true);
-                    } else {
-                        try {
-                            if (initialAuthToken) {
-                                await signInWithCustomToken(authInstance, initialAuthToken);
-                            } else {
-                                await signInAnonymously(authInstance);
-                            }
-                        } catch (error) {
-                            console.error("Authentication failed:", error);
-                            setIsAuthReady(true);
-                        }
-                    }
-                });
-                return () => unsubscribeAuth();
-            }, []);
+            messages.unshift(newMessage); // 최신 메시지를 맨 앞에
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
 
-            // Firestore listener to fetch messages
-            useEffect(() => {
-                if (!db || !isAuthReady) {
-                    return;
-                }
+            // 성공 메시지 표시
+            const successMessage = document.getElementById('successMessage');
+            successMessage.classList.add('show');
+            
+            // 폼 리셋
+            messageTextarea.value = '';
+            charCountSpan.textContent = '0';
+            
+            // 메시지 개수 업데이트
+            updateMessageCount();
 
-                setIsLoading(true);
-                const messagesCollectionRef = collection(db, `artifacts/${appId}/public/data/encouragement-messages`);
-                const q = query(messagesCollectionRef);
+            // 3초 후 성공 메시지 숨기기
+            setTimeout(() => {
+                successMessage.classList.remove('show');
+            }, 3000);
+        });
 
-                const unsubscribe = onSnapshot(q, (querySnapshot) => {
-                    const fetchedMessages = [];
-                    querySnapshot.forEach((doc) => {
-                        const messageData = doc.data();
-                        fetchedMessages.push({ id: doc.id, ...messageData });
-                    });
-                    // Sort the messages by timestamp in descending order on the client side
-                    fetchedMessages.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
-                    setMessages(fetchedMessages);
-                    setIsLoading(false);
-                }, (error) => {
-                    console.error("Error fetching messages:", error);
-                    setIsLoading(false);
-                });
+        // 메시지 보기 페이지로 이동
+        function openMessageView() {
+            // 실제 구현에서는 별도 페이지로 이동하거나 모달을 열 수 있습니다
+            const newWindow = window.open('', '_blank');
+            newWindow.document.write(getMessageViewHTML());
+            newWindow.document.close();
+        }
 
-                return () => unsubscribe();
-            }, [db, isAuthReady, appId]);
+        // 메시지 보기 페이지 HTML 생성
+        function getMessageViewHTML() {
+            const messages = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            
+            return `
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>수험생 응원 메시지</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-            // Handle message submission
-            const handleSendMessage = async (e) => {
-                e.preventDefault();
-                if (!newMessage.trim() || !db || !userId) {
-                    showCustomModal("메시지를 입력해주세요.");
-                    return;
-                }
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-                const messageData = {
-                    text: newMessage,
-                    timestamp: serverTimestamp(),
-                    senderId: userId,
-                };
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
 
-                try {
-                    await addDoc(collection(db, `artifacts/${appId}/public/data/encouragement-messages`), messageData);
-                    setNewMessage('');
-                    showCustomModal("메시지가 성공적으로 전송되었습니다!");
-                } catch (error) {
-                    console.error("Error adding message:", error);
-                    showCustomModal("메시지 전송에 실패했습니다. 다시 시도해주세요.");
-                }
-            };
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
 
-            return (
-                <div className="min-h-screen bg-gray-100 flex flex-col items-center p-4">
-                    {showModal && <Modal message={modalMessage} onClose={() => setShowModal(false)} />}
-                    <div className="w-full max-w-2xl bg-white shadow-lg rounded-xl p-6 md:p-8 space-y-8 mt-12">
-                        <header className="text-center">
-                            <h1 className="text-3xl md:text-4xl font-extrabold text-gray-800 tracking-tight leading-tight">
-                                수험생 여러분, 힘내세요!
-                            </h1>
-                            <p className="mt-2 text-md md:text-lg text-gray-600">
-                                여러분의 따뜻한 응원 메시지가 큰 힘이 됩니다.
-                            </p>
-                        </header>
-                        <div className="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 rounded-lg">
-                            <p><span className="font-bold">안내:</span> 수험생들을 위한 응원 메시지를 남겨주세요.</p>
-                        </div>
-                        <div className="text-center text-sm text-gray-400">
-                            <p>사용자 ID: {userId ? userId : '인증 중...'}</p>
-                        </div>
-                        <form onSubmit={handleSendMessage} className="space-y-4">
-                            <textarea
-                                className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow duration-200 h-32 resize-none"
-                                placeholder="여기에 응원 메시지를 작성해주세요..."
-                                value={newMessage}
-                                onChange={(e) => setNewMessage(e.target.value)}
-                                maxLength="300"
-                            ></textarea>
-                            <button
-                                type="submit"
-                                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
-                            >
-                                메시지 보내기
-                            </button>
-                        </form>
-                        <hr className="border-t-2 border-gray-200 my-8" />
-                        <section className="space-y-4">
-                            <h2 className="text-2xl font-bold text-gray-800 text-center">모두가 남긴 응원 메시지</h2>
-                            {isLoading ? (
-                                <div className="flex justify-center items-center h-40">
-                                    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
-                                </div>
-                            ) : messages.length === 0 ? (
-                                <p className="text-center text-gray-500 py-8">아직 메시지가 없네요. 첫 번째 응원 메시지를 남겨주세요!</p>
-                            ) : (
-                                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                    {messages.map((msg) => (
-                                        <div key={msg.id} className="bg-gray-50 p-5 rounded-lg shadow-sm border border-gray-200 flex flex-col justify-between h-full transform hover:scale-105 transition duration-300 ease-in-out">
-                                            <p className="text-gray-700 text-base leading-relaxed break-words whitespace-pre-wrap">
-                                                {msg.text}
-                                            </p>
-                                            {msg.timestamp && (
-                                                <p className="mt-4 text-xs text-gray-400 text-right">
-                                                    {new Date(msg.timestamp.toMillis()).toLocaleString()}
-                                                </p>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </section>
+        .title {
+            font-size: 2.2rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .message-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            margin-bottom: 20px;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .message-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-text {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .message-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .like-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .like-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .no-messages {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            color: #666;
+            font-size: 1.2rem;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #333;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .title {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="window.close()">← 돌아가기</button>
+    
+    <div class="container">
+        <div class="header">
+            <h1 class="title">💝 수험생 응원 메시지</h1>
+            <p class="subtitle">여러분을 응원하는 따뜻한 마음들이 모여있어요</p>
+            <p style="margin-top: 10px; color: #f5576c; font-weight: 600;">총 ${messages.length}개의 응원 메시지</p>
+        </div>
+
+        ${messages.length === 0 ? 
+            `<div class="no-messages">
+                아직 응원 메시지가 없어요.<br>
+                첫 번째 응원 메시지를 남겨보시는 건 어떨까요? 🌟
+            </div>` 
+            : 
+            messages.map((msg, index) => `
+                <div class="message-card" style="animation-delay: ${index * 0.1}s">
+                    <div class="message-text">${msg.message.replace(/\n/g, '<br>')}</div>
+                    <div class="message-meta">
+                        <span>${new Date(msg.timestamp).toLocaleString('ko-KR')}</span>
+                        <button class="like-btn" onclick="likeMessage(${msg.id})">
+                            ❤️ ${msg.likes || 0}
+                        </button>
                     </div>
-                    <footer className="mt-8 text-center text-gray-500 text-sm">
-                        <p></p>
-                    </footer>
                 </div>
-            );
-        };
+            `).join('')
+        }
+    </div>
 
-        const container = document.getElementById('root');
-        const root = ReactDOM.createRoot(container);
-        root.render(<App />);
-
+    <script>
+        function likeMessage(messageId) {
+            const messages = JSON.parse(localStorage.getItem('encouragementMessages') || '[]');
+            const messageIndex = messages.findIndex(m => m.id === messageId);
+            
+            if (messageIndex !== -1) {
+                messages[messageIndex].likes = (messages[messageIndex].likes || 0) + 1;
+                localStorage.setItem('encouragementMessages', JSON.stringify(messages));
+                location.reload(); // 페이지 새로고침으로 업데이트된 좋아요 수 반영
+            }
+        }
+    </script>
+</body>
+</html>
+            `;
+        }
     </script>
 </body>
 </html>
