@@ -406,10 +406,28 @@
             color: #555;
             border-left: 5px solid #f5576c;
         }
+
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            z-index: 1000;
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="floating-hearts" id="floatingHearts"></div>
+    
+    <!-- 디버그 정보 (문제 해결용) -->
+    <div class="debug-info" id="debugInfo">
+        로딩 중...
+    </div>
     
     <div class="container">
         <div class="header">
@@ -444,8 +462,7 @@
             <div class="no-messages">
                 <div class="no-messages-icon">📝</div>
                 <div class="no-messages-text">
-                    아직 응원 메시지가 없어요.<br>
-                    첫 번째 응원 메시지를 기다리고 있어요! 🌟
+                    메시지를 불러오는 중...
                 </div>
             </div>
         </div>
@@ -474,14 +491,32 @@
             "힘들어도 계속 걸어가세요. 목표는 더 가까이 와 있어요! 🚀"
         ];
 
+        // 디버그 정보 업데이트
+        function updateDebugInfo(info) {
+            const debugDiv = document.getElementById('debugInfo');
+            debugDiv.textContent = info;
+            console.log('Debug:', info);
+        }
+
         // 페이지 로드 시 실행
         window.addEventListener('load', function() {
+            updateDebugInfo('페이지 로드 시작');
+            
+            // 로컬스토리지 확인
+            const stored = localStorage.getItem(STORAGE_KEY);
+            updateDebugInfo(`저장된 데이터: ${stored ? '있음' : '없음'}`);
+            
             loadMessages();
             createFloatingHearts();
             showRandomQuote();
             
             // 5초마다 명언 변경
             setInterval(showRandomQuote, 5000);
+            
+            // 디버그 정보 3초 후 숨기기
+            setTimeout(() => {
+                document.getElementById('debugInfo').style.display = 'none';
+            }, 3000);
         });
 
         // 랜덤 명언 표시
@@ -512,15 +547,41 @@
 
         // 메시지 로드
         function loadMessages() {
-            allMessages = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            updateStats();
-            filterMessages(currentFilter);
+            try {
+                const storedData = localStorage.getItem(STORAGE_KEY);
+                allMessages = storedData ? JSON.parse(storedData) : [];
+                
+                updateDebugInfo(`메시지 ${allMessages.length}개 로드됨`);
+                console.log('Loaded messages:', allMessages);
+                
+                updateStats();
+                filterMessages(currentFilter);
+            } catch (error) {
+                console.error('메시지 로드 오류:', error);
+                updateDebugInfo('로드 오류: ' + error.message);
+                allMessages = [];
+                updateStats();
+                displayMessages([]);
+            }
         }
 
-        // 통계 업데이트
+        // 통계 업데이트 (수정됨)
         function updateStats() {
             const totalLikes = allMessages.reduce((sum, msg) => sum + (msg.likes || 0), 0);
-            document.getElementById('totalLikes').textContent = totalLikes;
+            
+            // 요소 존재 확인
+            const totalMessagesElement = document.getElementById('totalMessages');
+            const totalLikesElement = document.getElementById('totalLikes');
+            
+            if (totalMessagesElement) {
+                totalMessagesElement.textContent = allMessages.length;
+            }
+            
+            if (totalLikesElement) {
+                totalLikesElement.textContent = totalLikes;
+            }
+            
+            console.log(`통계 업데이트: 메시지 ${allMessages.length}개, 좋아요 ${totalLikes}개`);
         }
 
         // 메시지 필터링
@@ -529,7 +590,10 @@
             
             // 버튼 활성화 상태 업데이트
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            event?.target?.classList.add('active') || document.querySelector(`[onclick="filterMessages('${filter}')"]`).classList.add('active');
+            const activeBtn = document.querySelector(`[onclick="filterMessages('${filter}')"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
             
             let filteredMessages = [...allMessages];
             
@@ -541,7 +605,7 @@
                     filteredMessages = filteredMessages.sort((a, b) => (b.likes || 0) - (a.likes || 0));
                     break;
                 default:
-                    // 전체 보기 - 최신순 정렬
+                    // 전체 보기 - 최신순 정렬 (이미 정렬됨)
                     break;
             }
             
@@ -558,7 +622,7 @@
                         <div class="no-messages-icon">📝</div>
                         <div class="no-messages-text">
                             ${currentFilter === 'all' ? 
-                                '아직 응원 메시지가 없어요.<br>첫 번째 응원 메시지를 기다리고 있어요! 🌟' :
+                                '아직 응원 메시지가 없어요.<br>첫 번째 응원 메시지를 기다리고 있어요! 🌟<br><br><a href="index.html" style="color: #f5576c; text-decoration: none; font-weight: bold;">→ 첫 번째 메시지 작성하러 가기</a>' :
                                 '해당 조건의 메시지가 없어요.<br>다른 필터를 선택해보세요! 😊'
                             }
                         </div>
@@ -657,7 +721,26 @@
                 });
             }
         }
+
+        // 테스트 메시지 추가 함수 (디버그용)
+        function addTestMessage() {
+            const testMessages = [
+                {id: Date.now(), message: "테스트 메시지입니다! 화이팅! 💪", timestamp: new Date().toISOString(), likes: 0},
+                {id: Date.now()+1, message: "수험생 여러분 모두 응원합니다! ✨", timestamp: new Date().toISOString(), likes: 2}
+            ];
+            
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(testMessages));
+            loadMessages();
+            console.log('테스트 메시지가 추가되었습니다.');
+        }
+
+        // 디버그: 키보드 단축키로 테스트 메시지 추가 (Ctrl + T)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 't') {
+                e.preventDefault();
+                addTestMessage();
+            }
+        });
     </script>
 </body>
-</html>Messages').textContent = allMessages.length;
-            document.getElementById('total
+</html>
